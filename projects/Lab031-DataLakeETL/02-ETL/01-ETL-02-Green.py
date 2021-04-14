@@ -28,7 +28,7 @@ canonicalTripSchemaColList = ["taxi_type","vendor_id","pickup_datetime","dropoff
 
 # COMMAND ----------
 
-# MAGIC %run ./includes/common-functions
+# MAGIC %run ../includes/common-functions
 
 # COMMAND ----------
 
@@ -368,4 +368,4 @@ for j in range(2016,2018):
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC select * from taxi_db.green_taxi_trips_raw;
+# MAGIC select * from taxi_db.green_taxi_trips_raw LIMIT 100;

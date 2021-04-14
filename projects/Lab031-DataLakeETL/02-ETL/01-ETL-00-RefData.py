@@ -57,7 +57,7 @@ display(dbutils.fs.ls("dbfs:%s" % destRefDir))
 
 # COMMAND ----------
 
-# MAGIC %run ./includes/common-functions
+# MAGIC %run ../includes/common-functions
 
 # COMMAND ----------
 
@@ -116,6 +116,8 @@ vendorSchema = StructType([
 # MAGIC ### Load Reference data
 # MAGIC 
 # MAGIC There are many ways to load data.  This actually isn't my favorite, but it's the fastest way to just copy files when you want to use dbx.  This could also go in a common functions library.
+# MAGIC 
+# MAGIC This shows how to take a csv and, with one line of code, convert it to parquet or another format
 
 # COMMAND ----------
 
@@ -285,7 +287,3 @@ display(dbutils.fs.ls(destRefDir))
 
 # MAGIC %sql
 # MAGIC select * from taxi_db.vendor_lookup;
-
-# COMMAND ----------
-
-
