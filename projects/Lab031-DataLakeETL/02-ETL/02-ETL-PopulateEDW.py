@@ -115,3 +115,30 @@ reportDF.coalesce(1).write.jdbc(jdbcUrl, "TRIPS_BY_HOUR", mode="overwrite", prop
 # COMMAND ----------
 
 dbutils.notebook.exit("Pass")
+
+# COMMAND ----------
+
+# MAGIC %md In another "driver" notebook we can orchestrate this workflow like this:
+# MAGIC 
+# MAGIC ```python
+# MAGIC insertBatchMetadata(1,"Execute report 1","Started")
+# MAGIC executionStatusReport1 = dbutils.notebook.run("Report-1", 60)
+# MAGIC 
+# MAGIC if(executionStatusReport1 == "Pass"):
+# MAGIC   insertBatchMetadata(1,"Execute report 1","Completed")
+# MAGIC else:
+# MAGIC   insertBatchMetadata(1,"Execute report 1","Failed")
+# MAGIC   
+# MAGIC executionStatusReport2 = "-"
+# MAGIC if(executionStatusReport1 == "Pass"):
+# MAGIC   insertBatchMetadata(2,"Execute report 2","Started")
+# MAGIC   executionStatusReport2 = dbutils.notebook.run("Report-2", 60)
+# MAGIC   if(executionStatusReport2 == "Pass"):
+# MAGIC     insertBatchMetadata(2,"Execute report 2","Completed")
+# MAGIC   else:
+# MAGIC     insertBatchMetadata(2,"Execute report 2","Failed")  
+# MAGIC ```
+
+# COMMAND ----------
+
+
