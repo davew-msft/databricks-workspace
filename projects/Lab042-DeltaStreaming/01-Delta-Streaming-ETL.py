@@ -162,4 +162,4 @@ while current < num_rows:
 # MAGIC 
 # MAGIC You can also stop the above cell at any time when you are finished
 # MAGIC 
-# MAGIC The [second notebook can be found here]().
+# MAGIC The [second notebook can be found here](https://github.com/davew-msft/databricks-workspace/blob/master/projects/Lab042-DeltaStreaming/02-Streaming.py).
