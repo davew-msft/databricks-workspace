@@ -60,17 +60,25 @@ streamDF1 = (
 # best to use a checkpoint location that is DBFS, not ADLS, for this use case, for speed.  
 # make sure you have a naming convention and location that makes sense for all of your streaming workloads
 
+datalake_root_project_path = "/mnt/lake/silver/iot/stream_data"
+
+
 #DISCUSSION POINT:  what is the process when a change needs to be made to a streaming solution?  
 (streamDF
   .writeStream
   .format("delta")
-  .option("checkpointLocation", "/checkpoints/iot/silver/stream_data") 
+  .option("checkpointLocation", "/checkpoints{}".format(datalake_root_project_path)) 
   .outputMode("append") # appends data to our table
-  .start("{}/silver/iot/stream_data".format(datalake_root_project_path))) 
+  .start("{}".format(datalake_root_project_path))) 
 
 # check your destination and verify the files are being created
 # cancel the query when you are satisfied everything is working
 
 # COMMAND ----------
 
+dbutils.fs.rm("/checkpoints/iot/silver/stream_data",True)
 
+/landing/OracleUCM/projectadfasdf/year=....
+/raw/OracleUCM/projectadfasdf/year=....
+/checkpoints
+/checkpoints/raw/OracleUCM/projectadfasdf

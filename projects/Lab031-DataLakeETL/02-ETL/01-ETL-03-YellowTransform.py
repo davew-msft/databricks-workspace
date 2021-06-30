@@ -85,7 +85,13 @@ curatedDF = sql("""
       on (t.dropoff_location_id = tzdo.location_id)
   """)
 
-curatedDFConformed = (curatedDF.withColumn("temp_vendor_id", col("vendor_id").cast("integer")).drop("vendor_id").withColumnRenamed("temp_vendor_id", "vendor_id").withColumn("temp_payment_type", col("payment_type").cast("integer")).drop("payment_type").withColumnRenamed("temp_payment_type", "payment_type"))
+curatedDFConformed = (curatedDF
+                      .withColumn("temp_vendor_id", col("vendor_id").cast("integer"))
+                      .drop("vendor_id")
+                      .withColumnRenamed("temp_vendor_id", "vendor_id")
+                      .withColumn("temp_payment_type",col("payment_type").cast("integer"))
+                      .drop("payment_type")
+                      .withColumnRenamed("temp_payment_type", "payment_type"))
 
 #Save as parquet, partition by year and month
 #curatedDFConformed.coalesce(15).write.partitionBy("trip_year", "trip_month").parquet(destDataDirRoot)

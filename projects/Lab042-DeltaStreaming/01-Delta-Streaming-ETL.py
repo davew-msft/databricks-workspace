@@ -33,6 +33,7 @@ root_project_folder = "{}/{}/bikeSharing".format(mount_dir,container)
 
 # COMMAND ----------
 
+
 # let's look at some sample dbx datasets for bike sharing, we'll use this as the source data for batch ingestion
 print(root_project_folder)
 display(dbutils.fs.ls(root_project_folder))
@@ -63,8 +64,7 @@ dailydf = (spark
 .read
 .option("header", True)
 .option("inferSchema", True)
-.csv("{}
-     /data-001/day.csv".format(root_project_folder)))
+.csv("{}/data-001/day.csv".format(root_project_folder)))
 
 
 # COMMAND ----------

@@ -111,5 +111,5 @@ display(dbutils.fs.ls("/mnt/lake"))
 # COMMAND ----------
 
 # if needed
-#dbutils.fs.unmount("/mnt/wasb-nyctaxi-staging")
-#dbutils.fs.unmount("/mnt/lake")
+# dbutils.fs.unmount("/mnt/wasb-nyctaxi-staging")
+# dbutils.fs.unmount("/mnt/lake")

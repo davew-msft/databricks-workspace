@@ -259,6 +259,12 @@ dbutils.fs.rm(destTranDir,recurse=True)
 
 # COMMAND ----------
 
+df1 = spark.read.format("csv")..option("delimiter",",")
+df1.summary
+df1.head
+
+# COMMAND ----------
+
 #Process data, save as parquet
 for j in range(2016,2017):
   endMonth = None

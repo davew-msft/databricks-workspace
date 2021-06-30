@@ -82,7 +82,7 @@ yellowTaxiDFHomogenized.createOrReplaceTempView("yellow_taxi_trips_unionable")
 
 # COMMAND ----------
 
-yellowTaxiDFHomogenized.printSchema()
+display(yellowTaxiDFHomogenized.printSchema())
 
 # COMMAND ----------
 
