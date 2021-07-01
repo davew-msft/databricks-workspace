@@ -10,9 +10,13 @@
 # MAGIC   * if you have your data lake mounted (maybe to /mnt/lake) then use that
 # MAGIC   * you will need to change the data lake paths to match your environment
 # MAGIC 
-# MAGIC ### Connecting to my davcewdemoblobs WASB data
-# MAGIC * TODO:  need to complete the steps
+# MAGIC ### Connecting to my davewdemoblobs WASB data
+# MAGIC 
 # MAGIC * davewdemoblobs/datasets/bikeSharing
+
+# COMMAND ----------
+
+# MAGIC %run ../../includes/common-functions
 
 # COMMAND ----------
 
@@ -25,11 +29,25 @@ mount_dir = "/mnt"
 root_project_folder = "{}/{}/bikeSharing".format(mount_dir,container)
 # uri:  https://davewdemoblobs.blob.core.windows.net/datasets?sv=2020-04-08&st=2021-04-15T14%3A59%3A00Z&se=2050-04-17T14%3A59%3A00Z&sr=c&sp=rl&sig=fS29eguEC74TTc01rBs%2BS%2BG1J9v6Q4ZqM%2B0B93yTPjA%3D
 
+mount_blob_using_sas(
+  storage_account = source_account_name, 
+  container = container,
+  folder = mount_dir, 
+  token = read_only_container_sas
+)
+                     
 # this should be run in any notebook/cluster that is running where you want to see the new mount
 #dbutils.fs.refreshMounts()
 
-#dbutils.fs.unmount("/mnt/dbricks-delta")
 
+# COMMAND ----------
+
+# if needed
+# dbutils.fs.unmount("/mnt/datasets")
+
+# COMMAND ----------
+
+display(dbutils.fs.ls("/mnt/datasets"))
 
 # COMMAND ----------
 
@@ -117,7 +135,7 @@ df.count()
 
 # COMMAND ----------
 
-## for our simulation we will save our data frame to a table and collect batchs to write out on a cadence
+## for our simulation we will save our data frame to a table and collect batches to write out on a cadence
 try:
   df = spark.sql("SELECT * FROM stream_data")
   print("Table Exists. Loaded Data.")
@@ -162,4 +180,4 @@ while current < num_rows:
 # MAGIC 
 # MAGIC You can also stop the above cell at any time when you are finished
 # MAGIC 
-# MAGIC The [second notebook can be found here](https://github.com/davew-msft/databricks-workspace/blob/master/projects/Lab042-DeltaStreaming/02-Streaming.py).
+# MAGIC The second notebook can be found in the same notebook as this notebook.

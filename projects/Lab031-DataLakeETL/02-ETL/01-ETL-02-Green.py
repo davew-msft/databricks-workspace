@@ -297,6 +297,11 @@ dbutils.fs.rm(destTranDir,recurse=True)
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC We only need a few months of data so feel free to kill the next cell after a few mins and continue with subsequent cells
+
+# COMMAND ----------
+
 
 #Green taxi data starts from 2013/08
 for j in range(2016,2018):

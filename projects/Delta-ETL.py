@@ -15,11 +15,6 @@
 
 # COMMAND ----------
 
-# this shouldn't be needed anymore
-#spark.conf.set("spark.databricks.delta.preview.enabled", True) 
-
-# COMMAND ----------
-
 # MAGIC %md 
 # MAGIC ## 1.0. Basic create operation
 
@@ -226,8 +221,8 @@ booksDF.write.format("delta").mode("append").save(deltaTableDirectory)
 
 # COMMAND ----------
 
-# notice that numFiles has decreased
-%sql DESCRIBE DETAIL books_db.books;
+# MAGIC %sql 
+# MAGIC DESCRIBE DETAIL books_db.books;
 
 # COMMAND ----------
 
@@ -468,3 +463,7 @@ display(dbutils.fs.ls(partitionDirectory))
 
 # MAGIC %sql
 # MAGIC DESCRIBE HISTORY books_db.books;
+
+# COMMAND ----------
+
+

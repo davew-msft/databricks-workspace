@@ -17,8 +17,8 @@ from pyspark.sql.types import StructType, StructField, StringType, IntegerType,L
 # vars to change
 srcDataDirRoot = "/mnt/wasb-nyctaxi-staging/transactional-data/" #Root dir for source data
 destRoot = "/mnt/lake/raw/"
-destProjDir = "%snyctaxi/" % destRoot
-destTranDir = "%stransactions/yellow-taxi/" %  destProjDir #Root dir for consumable data
+destProjDir = "{}nyctaxi/".format(destRoot)
+destTranDir = "{}transactions/yellow-taxi/".format(destProjDir) #Root dir for consumable data
 print (destTranDir)
 
 # COMMAND ----------
@@ -138,6 +138,8 @@ yellowTripSchemaPre2015 = StructType([
 
 # MAGIC %md
 # MAGIC #### 3. Some functions
+# MAGIC 
+# MAGIC It would likely be better to put these in an `includes` file.  
 
 # COMMAND ----------
 
@@ -253,15 +255,30 @@ dbutils.fs.rm(destTranDir,recurse=True)
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC Let's just pull one file and look at it.  Basically, `data profiling`  
+# MAGIC 
 # MAGIC Can you see any problems with this code?  
 # MAGIC 
 # MAGIC We are only going to load a subset of the data
 
 # COMMAND ----------
 
-df1 = spark.read.format("csv")..option("delimiter",",")
+# notice this has a header, go ahead and fix the code
+# but notice the schema is still "inferred".  Don't do this in prod, but ok during data profiling
+df1 = (spark
+       .read
+       .format("csv")
+       #.option("header",True)
+       .option("delimiter",",")
+       .load("/mnt/wasb-nyctaxi-staging/transactional-data/year=2010/month=02/type=yellow/yellow_tripdata_2010-02.csv")
+)
 df1.summary
-df1.head
+display(df1)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC This doesn't have to run to completion.  Just let it run a few mins so we have about 2 months of data.  Then kill the cell and run the remaining cells below.  
 
 # COMMAND ----------
 

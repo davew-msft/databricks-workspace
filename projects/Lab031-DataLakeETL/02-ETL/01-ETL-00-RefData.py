@@ -1,15 +1,15 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC ETL the reference data
+# MAGIC ## Load the reference data
 # MAGIC 
 # MAGIC When you are ready to productionize this code as a scheduled pipeline you would remove anything that prints unneeded output.  
 # MAGIC 
 # MAGIC The actual process would be the DevOps engineer (which could be the same as the developer) would change all of the hard-coded locations and objects and move these to the proper area of the lake.  We are not doing that for these labs.  
 # MAGIC 
-# MAGIC ## In this lab
+# MAGIC ## In this notebook
 # MAGIC 
 # MAGIC 1. run the common functions so we can reuse them
-# MAGIC 2. create external unmanaged hive tables (ppl understand sql better than spark)
+# MAGIC 2. create external unmanaged hive tables (folks understand sql better than spark)
 # MAGIC 1. load reference data from our wasb acct to our data lake
 # MAGIC 3. create statistics 
 # MAGIC 
@@ -18,7 +18,8 @@
 
 # COMMAND ----------
 
-#Imports cell, this is generally copy/paste for all notebooks, once you get a format that has everything you need.  This is missing a lot.
+# Imports cell, this is generally copy/paste for all notebooks, once you get a format that has everything you need.  
+# This is missing a lot but is a good start
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType,LongType,FloatType,DoubleType, TimestampType
 
 # COMMAND ----------
@@ -26,8 +27,9 @@ from pyspark.sql.types import StructType, StructField, StringType, IntegerType,L
 # vars to change
 srcDataDirRoot = "/mnt/wasb-nyctaxi-staging/reference-data/" #Root dir for source data
 destRoot = "/mnt/lake/raw/"
-destProjDir = "%snyctaxi/" % destRoot
-destRefDir = "%sreference/" %  destProjDir #Root dir for consumable data
+destProjDir = "{0}nyctaxi/".format(destRoot)
+destRefDir = "{0}reference/".format(destProjDir) #Root dir for consumable data
+
 print (destRefDir)
 
 # COMMAND ----------
@@ -113,6 +115,23 @@ vendorSchema = StructType([
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC * before executing these cells, consider looking at the data files usuing storage explorer so you understand the format.   
+# MAGIC * also, consider running only one load at a time
+# MAGIC * check your lake to ensure the data landed correctly
+# MAGIC * yes, we are moving directly to parquet and skipping landing.  This is reference data and likely shouldn't change much.  However, if you want to stick to a reusable pattern, I just violated that best practice
+
+# COMMAND ----------
+
+# if you want to "reset" your lake, run this code
+dbutils.fs.rm(destRefDir,True)
+
+# COMMAND ----------
+
+display(dbutils.fs.ls(destRefDir))
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ### Load Reference data
 # MAGIC 
 # MAGIC There are many ways to load data.  This actually isn't my favorite, but it's the fastest way to just copy files when you want to use dbx.  This could also go in a common functions library.
@@ -121,50 +140,13 @@ vendorSchema = StructType([
 
 # COMMAND ----------
 
-def loadReferenceData(srcDatasetName, srcDataFile, destDataDir, srcSchema, delimiter ):
-  print("Dataset:  " + srcDatasetName)
-  print(".......................................................")
-  
-  #Execute for idempotent runs
-  print("....deleting destination directory - " + str(dbutils.fs.rm(destDataDir, recurse=True)))
-  
-  #Read source data
-  refDF = (sqlContext.read.option("header", True)
-                      .schema(srcSchema)
-                      .option("delimiter",delimiter)
-                      .csv(srcDataFile))
-      
-  #Write parquet output
-  print("....reading source and saving as parquet")
-  refDF.coalesce(1).write.parquet(destDataDir)
-  
-  #Delete residual files from job operation (_SUCCESS, _start*, _committed*)
-  #print "....deleting flag files"
-  #dbutils.fs.ls(destDataDir + "/").foreach(lambda i: if (!(i.path contains "parquet")) dbutils.fs.rm(i.path))
-  
-  print("....done")
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC * before executing these cells, consider looking at the data files usuing storage explorer so you understand the format.   
-# MAGIC * also, consider running only one load at a time
-# MAGIC * check your lake to ensure the data landed correctly
-# MAGIC * yes, we are moving directly to parquet and skipping landing.  This is reference data and likely shouldn't change much.  However, if you want to stick to a reusable pattern, I just violated that best practice
-
-# COMMAND ----------
-
-display(dbutils.fs.ls(destRefDir))
-
-# COMMAND ----------
-
 ## Load the data
-loadReferenceData("taxi zone",srcDataDirRoot + "taxi_zone_lookup.csv",destRefDir + "taxi-zone",taxiZoneSchema,",")
-loadReferenceData("trip month",srcDataDirRoot + "trip_month_lookup.csv",destRefDir + "trip-month",tripMonthNameSchema,",")
-loadReferenceData("rate code",srcDataDirRoot + "rate_code_lookup.csv",destRefDir + "rate-code",rateCodeSchema,"|")
-loadReferenceData("payment type",srcDataDirRoot + "payment_type_lookup.csv",destRefDir + "payment-type",paymentTypeSchema,"|")
-loadReferenceData("trip type",srcDataDirRoot + "trip_type_lookup.csv",destRefDir + "trip-type",tripTypeSchema,"|")
-loadReferenceData("vendor",srcDataDirRoot + "vendor_lookup.csv",destRefDir + "vendor",vendorSchema,"|")
+TaxiData.loadReferenceData("taxi zone",srcDataDirRoot + "taxi_zone_lookup.csv",destRefDir + "taxi-zone",taxiZoneSchema,",")
+TaxiData.loadReferenceData("trip month",srcDataDirRoot + "trip_month_lookup.csv",destRefDir + "trip-month",tripMonthNameSchema,",")
+TaxiData.loadReferenceData("rate code",srcDataDirRoot + "rate_code_lookup.csv",destRefDir + "rate-code",rateCodeSchema,"|")
+TaxiData.loadReferenceData("payment type",srcDataDirRoot + "payment_type_lookup.csv",destRefDir + "payment-type",paymentTypeSchema,"|")
+TaxiData.loadReferenceData("trip type",srcDataDirRoot + "trip_type_lookup.csv",destRefDir + "trip-type",tripTypeSchema,"|")
+TaxiData.loadReferenceData("vendor",srcDataDirRoot + "vendor_lookup.csv",destRefDir + "vendor",vendorSchema,"|")
 
 # COMMAND ----------
 
@@ -287,3 +269,7 @@ display(dbutils.fs.ls(destRefDir))
 
 # MAGIC %sql
 # MAGIC select * from taxi_db.vendor_lookup;
+
+# COMMAND ----------
+
+

@@ -77,8 +77,3 @@ datalake_root_project_path = "/mnt/lake/silver/iot/stream_data"
 # COMMAND ----------
 
 dbutils.fs.rm("/checkpoints/iot/silver/stream_data",True)
-
-/landing/OracleUCM/projectadfasdf/year=....
-/raw/OracleUCM/projectadfasdf/year=....
-/checkpoints
-/checkpoints/raw/OracleUCM/projectadfasdf

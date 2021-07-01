@@ -97,4 +97,31 @@ None
 
 # COMMAND ----------
 
+print("Building TaxiData class")
+class TaxiData:
+  def loadReferenceData(srcDatasetName, srcDataFile, destDataDir, srcSchema, delimiter ):
+    print("Dataset:  " + srcDatasetName)
+    print(".......................................................")
+
+    #Execute for idempotent runs
+    print("....deleting destination directory - " + str(dbutils.fs.rm(destDataDir, recurse=True)))
+
+    #Read source data
+    refDF = (sqlContext.read.option("header", True)
+                        .schema(srcSchema)
+                        .option("delimiter",delimiter)
+                        .csv(srcDataFile))
+
+    #Write parquet output
+    print("....reading source and saving as parquet")
+    refDF.coalesce(1).write.parquet(destDataDir)
+
+    #Delete residual files from job operation (_SUCCESS, _start*, _committed*)
+    #print "....deleting flag files"
+    #dbutils.fs.ls(destDataDir + "/").foreach(lambda i: if (!(i.path contains "parquet")) dbutils.fs.rm(i.path))
+
+    print("....done")
+
+# COMMAND ----------
+
 print("done loading common-functions")
