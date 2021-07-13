@@ -21,16 +21,37 @@
 # Imports cell, this is generally copy/paste for all notebooks, once you get a format that has everything you need.  
 # This is missing a lot but is a good start
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType,LongType,FloatType,DoubleType, TimestampType
+import re
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC If `/mnt/wasb-nyctaxi-staging` is not mounted, see `includes/00-mount-storages` and run that. 
+# MAGIC 
+# MAGIC **Only one person needs to run this per workspace**
 
 # COMMAND ----------
 
 # vars to change
+
+# this will allow everyone to run this lab without stomping on each other.  This is also a good "sandbox" pattern
+username = spark.sql("SELECT current_user()").collect()[0][0]
+userhome = f"dbfs:/user/{username}/batch"
+database = f"""batch_{re.sub("[^a-zA-Z0-9]", "_", username)}_db"""
+
 srcDataDirRoot = "/mnt/wasb-nyctaxi-staging/reference-data/" #Root dir for source data
-destRoot = "/mnt/lake/raw/"
+destRoot = "{0}/raw/".format(userhome)
 destProjDir = "{0}nyctaxi/".format(destRoot)
 destRefDir = "{0}reference/".format(destProjDir) #Root dir for consumable data
 
-print (destRefDir)
+print (f"""
+       destRefDir:  {destRefDir}
+       username:    {username}
+       destRoot:    {destRoot}
+       destProjDir: {destProjDir}
+       destRefDir:  {destRefDir}
+       database:    {database}
+""")
 
 # COMMAND ----------
 
@@ -40,12 +61,17 @@ display(dbutils.fs.ls("dbfs:%s" % srcDataDirRoot))
 # COMMAND ----------
 
 # the lake probably doesn't have these folders, build them
-dbutils.fs.mkdirs("dbfs:%s" % (destRefDir))
+dbutils.fs.mkdirs(destRefDir)
+
+# COMMAND ----------
+
+# if needed, "reset" our data lake
+#dbutils.fs.rm(destRefDir,True)
 
 # COMMAND ----------
 
 # adjust paths above if needed
-display(dbutils.fs.ls("dbfs:%s" % destRefDir))
+display(dbutils.fs.ls(destRefDir))
 # this will fail until a file exists, that's ok and it's why we can't infer schema
 
 # COMMAND ----------
@@ -156,26 +182,61 @@ display(dbutils.fs.ls(destRefDir))
 
 # MAGIC %md
 # MAGIC create SQL objects.  Note that these could now be put into the sql objects file too.
+# MAGIC 
+# MAGIC **We will need to change the paths and object names since we are sharing a database.**
+
+# COMMAND ----------
+
+# we need to do this in a sqlContext since we want to pass variables from python into sql, in this case we will all share one db
+# but use separate SQL objects in that db
+#sqlContext.sql("CREATE DATABASE {}".format(database))
+#sqlContext.sql("use {}".format(database))
+
+# COMMAND ----------
+
+# MAGIC %md 
+# MAGIC To use variables in SQL we need to use widgets.  We can actually pass around widgets from SQL to python/scala, but this is a simplified example.
 
 # COMMAND ----------
 
 # MAGIC %sql 
+# MAGIC 
 # MAGIC use taxi_db;
-# MAGIC DROP TABLE IF EXISTS taxi_zone_lookup;
-# MAGIC CREATE TABLE IF NOT EXISTS taxi_zone_lookup(
+# MAGIC 
+# MAGIC --vars to change
+# MAGIC CREATE WIDGET TEXT tblname DEFAULT "taxi_zone_lookup_davew";
+# MAGIC CREATE WIDGET TEXT loc DEFAULT "/user/davew@microsoft.com/batch/raw/nyctaxi/reference/taxi-zone/";
+# MAGIC 
+# MAGIC -- 2 different ways of using vars
+# MAGIC SELECT getArgument("tblname") as Method1, '$loc' as Method2;
+# MAGIC 
+# MAGIC --I don't know why only the first output widget is shown.  
+
+# COMMAND ----------
+
+# MAGIC %sql 
+# MAGIC DROP TABLE IF EXISTS $tblname;             
+# MAGIC CREATE TABLE IF NOT EXISTS $tblname(       
 # MAGIC location_id STRING,
 # MAGIC borough STRING,
 # MAGIC zone STRING,
 # MAGIC service_zone STRING)
 # MAGIC USING parquet
-# MAGIC LOCATION '/mnt/lake/raw/nyctaxi/reference/taxi-zone/';
+# MAGIC LOCATION '$loc';
 # MAGIC 
-# MAGIC ANALYZE TABLE taxi_zone_lookup COMPUTE STATISTICS;
+# MAGIC ANALYZE TABLE $tblname COMPUTE STATISTICS;
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC select * from taxi_db.taxi_zone_lookup;
+# MAGIC 
+# MAGIC --in the real world you'd probably just use your tablename directly and not the var
+# MAGIC select * from taxi_db.$tblname;
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC You can fix the remaining code to match your datalake and object naming convention
 
 # COMMAND ----------
 
