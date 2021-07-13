@@ -15,7 +15,7 @@ folder = "definitive-guide/data/activity-json/streaming"
 token = "sp=rl&st=2020-07-01T17:38:50Z&se=2031-07-02T01:38:50Z&spr=https&sv=2020-08-04&sr=c&sig=uV%2BQtIrBlgE6Y5xQWEZRKlSTAJCzThnrdaSMfAA0dIo%3D"
 
 print(f"""
-vars used in this lab:
+vars used in intro lab:
 username: {username}
 userhome: {userhome}
 database: {database}
@@ -55,6 +55,23 @@ def mount_blob_using_sas(storage_account, container, mount_location,folder, toke
 # COMMAND ----------
 
 mount_blob_using_sas(storage_account,container,mount_location,folder,token)
+
+# COMMAND ----------
+
+# this is for lakehouse pipelines
+folder = "healthcare"
+token = "sp=rl&st=2020-07-01T17:38:50Z&se=2031-07-02T01:38:50Z&spr=https&sv=2020-08-04&sr=c&sig=uV%2BQtIrBlgE6Y5xQWEZRKlSTAJCzThnrdaSMfAA0dIo%3D"
+mount_location_stream = f"/mnt/mtc-workshop/{folder}/"
+mount_blob_using_sas(storage_account,container,mount_location_stream,folder,token)
+
+# COMMAND ----------
+
+print(f"""
+vars used in healthcare/lakehouse/streaming lab:
+username: {username}
+userhome: {userhome}
+database: {database}
+mount_location_stream: {mount_location_stream}""")
 
 # COMMAND ----------
 

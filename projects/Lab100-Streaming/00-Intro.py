@@ -141,7 +141,8 @@ streamingDF = (spark
 
 # COMMAND ----------
 
-staticDF.isStreaming
+print(staticDF.isStreaming)
+print(streamingDF.isStreaming)
 
 # COMMAND ----------
 
@@ -337,7 +338,7 @@ streamingQuery.stop()                   # Stop the stream
 # MAGIC 
 # MAGIC `display(myDF, streamName = "myQuery")`
 # MAGIC 
-# MAGIC <img alt="Side Note" title="Side Note" style="vertical-align: text-bottom; position: relative; height:1.75em; top:0.05em; transform:rotate(15deg)" src="https://files.training.databricks.com/static/images/icon-note.webp"/> The previous cell programmatically stopped only active streaming query. In the cell below, `display` will start a new streaming query against the source defined in `streamingDF`.  We are passing `streaming_display` as the name for this newly started stream.
+# MAGIC The previous cell programmatically stopped only active streaming query. In the cell below, `display` will start a new streaming query against the source defined in `streamingDF`.  We are passing `streaming_display` as the name for this newly started stream.
 
 # COMMAND ----------
 
@@ -386,3 +387,10 @@ for s in spark.streams.active:
 # MAGIC * <a href="https://www.youtube.com/watch?v=rl8dIzTpxrI" target="_blank">A Deep Dive into Structured Streaming</a> by Tathagata Das. This is an excellent video describing how Structured Streaming works.
 # MAGIC * <a href="https://docs.databricks.com/spark/latest/structured-streaming/production.html#id2" target="_blank">Failed Streaming Query Recovery</a> Best Practices for Recovery.
 # MAGIC * <a href="https://databricks.com/blog/2018/03/20/low-latency-continuous-processing-mode-in-structured-streaming-in-apache-spark-2-3-0.html" target="_blank">Continuous Processing Mode</a> Lowest possible latency stream processing. 
+
+# COMMAND ----------
+
+# MAGIC %md 
+# MAGIC **Let's look at windowing next**
+# MAGIC 
+# MAGIC Open `01-TimeWindows` and follow along
