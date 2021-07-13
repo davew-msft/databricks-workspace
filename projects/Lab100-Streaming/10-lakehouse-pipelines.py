@@ -87,19 +87,21 @@
 
 # COMMAND ----------
 
-# I have this data copied, but everything else still needs to be fixed
+# this is our source data that we wish to stream
+display(dbutils.fs.ls(mount_location_stream))
 
-# need to copy this to attendees setup.  
-# streamingPath
-# dbutils.fs.ls("/mnt/training/healthcare")
 
-# dbutils.fs.cp ("/mnt/training/healthcare", "/mnt/lake/healthcare", True) 
+# COMMAND ----------
+
+# this is where we are going to "land" that data
+print(streamingPath)
+display(dbutils.fs.ls(streamingPath))
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ## Data Simulator
-# MAGIC Spark Structured Streaming can automatically process files as they land in your cloud object stores. To simulate this process, you will be asked to run the following operation several times throughout the course.
+# MAGIC Spark Structured Streaming can automatically process files as they land in your cloud object stores. To simulate this process, you will need to run the following operation several times throughout the course.
 
 # COMMAND ----------
 
@@ -118,6 +120,30 @@ display(dbutils.fs.ls(streamingPath))
 # MAGIC %md
 # MAGIC ### Read Stream
 # MAGIC Note that while you need to use the Spark DataFrame API to set up a streaming read, once configured you can immediately register a temp view to leverage Spark SQL for streaming transformations on your data.
+# MAGIC 
+# MAGIC ## What is this CloudFiles thing?
+# MAGIC 
+# MAGIC This is known as `databricks autoloader`.  
+# MAGIC 
+# MAGIC It is the recommended method for streaming raw/landing data from Azure blob/ADLS2, *when not using delta*.  By default dbx finds files by using `ls` commands which works well if there are few files.  Using eventing is much better.  
+# MAGIC 
+# MAGIC Why?  
+# MAGIC 
+# MAGIC * no code needed to incremementally process new files as they land in cloud storage.  
+# MAGIC * no need to manage state
+# MAGIC * uses features of Azure Event Grid to do this.  And databricks sets all this up for you.  
+# MAGIC * can handle millions of files in a directory without having to ennumerate them (a big problem traditionally)
+# MAGIC 
+# MAGIC 
+# MAGIC Configuring Auto Loader requires using the `cloudFiles` format. The syntax for this format differs only slightly from a standard streaming read.
+# MAGIC 
+# MAGIC All we need to do is replace our file format with `cloudFiles`, and add the file type as a string for the option `cloudFiles.format`.
+# MAGIC 
+# MAGIC Cloud Files will ignore previously processed data; only those newly written files will be processed.
+# MAGIC 
+# MAGIC Whether data ingestion will be run as scheduled batches or an always-on stream, Auto Loader makes it easy to idempotently load data into Delta Lake.
+# MAGIC 
+# MAGIC Additional [configuration options](https://docs.databricks.com/spark/latest/structured-streaming/auto-loader.html#configuration) are available.
 
 # COMMAND ----------
 
@@ -132,7 +158,9 @@ display(dbutils.fs.ls(streamingPath))
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Encoding the receipt time and the name of our dataset would allow us to use a single bronze table for multiple different data sources. This multiplex table design replicates the semi-structured nature of data stored in most data lakes while guaranteeing ACID transactions.
+# MAGIC Encoding the receipt time and the name of our dataset would allow us to use a single bronze table for multiple different data sources. This multiplex table design replicates the semi-structured nature of data stored in most data lakes while guaranteeing ACID transactions.  
+# MAGIC 
+# MAGIC Note:  I'm not sure multiplexing is a good idea for most data sources, but it could be helpful for IoT scenarios where multiple streams are publishing data to the same storage area.  
 # MAGIC 
 # MAGIC Downstream, we'll be able to subscribe to this table using the `dataset` field as a predicate, giving us a single table with read-after-write consistency guarantees as a source for multiple different queries.
 
@@ -186,13 +214,14 @@ display(dbutils.fs.ls(streamingPath))
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC Trigger another file arrival with the following cell and you'll see the changes immediately detected by the streaming query you've written.
+# Display how many records are in our table so we can watch it grow.
+# note the syntax:  this is a cool "trick" to query any delta-formatted table by path
+display(spark.sql(f"SELECT COUNT(*) FROM delta.`{bronzePath}`"))
 
 # COMMAND ----------
 
-# Display how many records are in our table so we can watch it grow.
-display(spark.sql(f"SELECT COUNT(*) FROM delta.`{bronzePath}`"))
+# MAGIC %md
+# MAGIC Trigger another file arrival with the following cell and you'll see the changes immediately detected by the streaming query you've written.
 
 # COMMAND ----------
 
@@ -277,6 +306,16 @@ NewFile.arrival()
 # MAGIC - Our recordings data will be joined with the PII to add patient names
 # MAGIC - The time for our recordings will be parsed to the format `'yyyy-MM-dd HH:mm:ss'` to be human-readable
 # MAGIC - We will exclude heart rates that are <= 0, as we know that these either represent the absence of the patient or an error in transmission
+# MAGIC 
+# MAGIC **Essentially, we've built a stream-to-static join.  This is a common pattern**
+# MAGIC 
+# MAGIC ## What Happens During a Stream-Static Join
+# MAGIC 
+# MAGIC On the streaming side, as expected, each time the streaming write triggers, a microbatch of data is processed representing all the new data that has arrived in the streaming source.
+# MAGIC 
+# MAGIC On the static side, behavior is the same as if we'd run a manual query against a Delta table (as above). For every batch processed, we reference the latest version of the Delta Lake table.
+# MAGIC 
+# MAGIC Note that this join is stateless; no watermark or windowing needs to be configured, and distinct keys from the join accumulate over time. Each streaming microbatch joins with the **most current version** of the static table.
 
 # COMMAND ----------
 
@@ -364,6 +403,10 @@ NewFile.arrival()
 
 # COMMAND ----------
 
+display(spark.sql(f"SELECT COUNT(*) FROM delta.`{dailyAvgPath}`"))
+
+# COMMAND ----------
+
 NewFile.arrival()
 
 # COMMAND ----------
@@ -383,6 +426,11 @@ spark.sql(f"""
   USING DELTA
   LOCATION '{dailyAvgPath}'
 """)
+
+# COMMAND ----------
+
+# MAGIC %sql 
+# MAGIC select * from daily_patient_avg LIMIT 10
 
 # COMMAND ----------
 
@@ -457,11 +505,3 @@ for s in spark.streams.active:
 # MAGIC * <a href="https://people.apache.org//~pwendell/spark-nightly/spark-branch-2.1-docs/latest/structured-streaming-kafka-integration.html#" target="_blank">Reading structured streams from Kafka</a>
 # MAGIC * <a href="http://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html#creating-a-kafka-source-stream#" target="_blank">Create a Kafka Source Stream</a>
 # MAGIC * <a href="https://docs.databricks.com/delta/delta-intro.html#case-study-multi-hop-pipelines#" target="_blank">Multi Hop Pipelines</a>
-
-# COMMAND ----------
-
-# MAGIC %md-sandbox
-# MAGIC &copy; 2021 Databricks, Inc. All rights reserved.<br/>
-# MAGIC Apache, Apache Spark, Spark and the Spark logo are trademarks of the <a href="http://www.apache.org/">Apache Software Foundation</a>.<br/>
-# MAGIC <br/>
-# MAGIC <a href="https://databricks.com/privacy-policy">Privacy Policy</a> | <a href="https://databricks.com/terms-of-use">Terms of Use</a> | <a href="http://help.databricks.com/">Support</a>

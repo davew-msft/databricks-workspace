@@ -75,7 +75,24 @@ mount_location_stream: {mount_location_stream}""")
 
 # COMMAND ----------
 
-#display(dbutils.fs.ls(mount_location))
+# this is for streaming upserts
+folder = "v01"
+token = "sp=rl&st=2020-07-01T17:38:50Z&se=2031-07-02T01:38:50Z&spr=https&sv=2020-08-04&sr=c&sig=uV%2BQtIrBlgE6Y5xQWEZRKlSTAJCzThnrdaSMfAA0dIo%3D"
+mount_location_stream_upsert = f"/mnt/mtc-workshop/streaming-source/"
+mount_blob_using_sas(storage_account,container,mount_location_stream_upsert,folder,token)
+
+# COMMAND ----------
+
+print(f"""
+vars used in healthcare/lakehouse/streaming lab:
+username: {username}
+userhome: {userhome}
+database: {database}
+mount_location_stream_upsert: {mount_location_stream_upsert}""")
+
+# COMMAND ----------
+
+#display(dbutils.fs.ls(mount_location_stream))
 
 # COMMAND ----------
 
