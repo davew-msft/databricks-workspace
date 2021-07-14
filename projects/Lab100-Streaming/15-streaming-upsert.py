@@ -4,7 +4,7 @@
 # MAGIC 
 # MAGIC Delta Lake ACID compliance enables many operations to take place in the data lake that would normally require a data warehouse. Delta Lake provides `MERGE` syntax to complete updates, deletes, and inserts as a single transaction.
 # MAGIC 
-# MAGIC Let's do merge logic on a streaming pipeline.
+# MAGIC Let's do merge logic on a streaming pipeline.   
 # MAGIC 
 # MAGIC This is especially cool when you need to do SCD2-style processing to a given table in the lake.  
 # MAGIC 
